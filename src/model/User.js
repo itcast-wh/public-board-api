@@ -18,6 +18,8 @@ const UserSchema = new Schema({
     sparse: true,
     default: ''
   },
+  salt: { default: String },
+  hash: { default: String },
   roles: { type: Array, default: [] },
   created: { type: Date },
   updated: { type: Date },

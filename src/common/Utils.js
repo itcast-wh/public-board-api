@@ -5,6 +5,51 @@ import { getValue } from '../config/RedisConfig'
 import moment from 'moment'
 import path from 'path'
 import fs from 'fs'
+import crypto from 'crypto'
+
+const genRandomString = (length) => {
+  return crypto.randomBytes(Math.ceil(length / 2))
+    .toString('hex') /** convert to hexadecimal format */
+    .slice(0, length) /** return required number of characters */
+}
+
+const sha512 = (password, salt) => {
+  var hash = crypto.createHmac('sha512', salt) /** Hashing algorithm sha512 */
+  hash.update(password)
+  var value = hash.digest('hex')
+  return {
+    salt: salt,
+    hash: value
+  }
+}
+
+const pbkdf2 = (password) => {
+  const salt = genRandomString(16)
+  const hash = crypto.pbkdf2Sync(password, salt,
+    1000, 64, 'sha512').toString('hex')
+  return {
+    salt,
+    hash
+  }
+}
+
+const validatePbkdf2 = (password, hash, salt) => {
+  const newHash = crypto.pbkdf2Sync(password,
+    salt, 1000, 64, 'sha512').toString('hex')
+  if (hash === newHash) {
+    return true
+  } else {
+    return false
+  }
+}
+
+const validateSha512 = (password, hash, salt) => {
+  var passwordData = sha512(password, salt)
+  if (passwordData.passwordHash === hash) {
+    return true
+  }
+  return false
+}
 
 const getJWTPayload = token => {
   // 验证并解析JWT
@@ -94,4 +139,13 @@ const dirExists = async dir => {
   return mkdirStatus
 }
 
-export { checkCode, getJWTPayload, dirExists }
+export {
+  checkCode,
+  getJWTPayload,
+  dirExists,
+  genRandomString,
+  sha512,
+  validateSha512,
+  pbkdf2,
+  validatePbkdf2
+}

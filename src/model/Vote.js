@@ -24,6 +24,12 @@ VoteSchema.pre('update', function (next) {
 })
 
 VoteSchema.statics = {
+  getVoteList: function (text, page, limit) {
+    return this.find({ title: text })
+      .skip(page * limit)
+      .limit(limit)
+      .sort({ created: -1 })
+  }
 }
 
 const Vote = mongoose.model('vote', VoteSchema)
