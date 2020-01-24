@@ -1,5 +1,6 @@
 import mongoose from '../config/DBHelpler'
 import moment from 'moment'
+import { pbkdf2 } from '@/common/Utils'
 
 const Schema = mongoose.Schema
 
@@ -18,8 +19,8 @@ const UserSchema = new Schema({
     sparse: true,
     default: ''
   },
-  salt: { default: String },
-  hash: { default: String },
+  name: { type: String, default: '' },
+  salt: { type: String, default: '' },
   roles: { type: Array, default: [] },
   created: { type: Date },
   updated: { type: Date },
@@ -30,6 +31,11 @@ const UserSchema = new Schema({
 // 使用middleware，每次保存都记录一下最后更新时间
 UserSchema.pre('save', function (next) {
   this.created = moment().format('YYYY-MM-DD HH:mm:ss')
+  if (this.password) {
+    const { salt, hash } = pbkdf2(this.password)
+    this.password = hash
+    this.salt = salt
+  }
   next()
 })
 

@@ -1,8 +1,6 @@
 import path from 'path'
 
 const DB_URL = 'mongodb://localhost:27017/board'
-const baseApi = 'api'
-const adminApi = 'admin'
 const secret = 'FvHbS5syynGTVegdfD8Vt2774ErM7Nsy'
 
 const uploadPath =
@@ -25,8 +23,6 @@ const baseUrl =
 export default {
   DB_URL,
   REDIS,
-  baseApi,
-  adminApi,
   secret,
   publicPath,
   uploadPath,
