@@ -14,4 +14,7 @@ router.post('/add-comments', ContentService.addComments)
 // 投票点赞
 router.get('/vote-like', ContentService.handsVote)
 
+// 投票点赞
+router.get('/comment-like', ContentService.handsComment)
+
 export default router

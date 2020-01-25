@@ -9,6 +9,7 @@ import config from './config/index'
 import koaBody from 'koa-body'
 import staticFile from 'koa-static'
 import routes from './routes/index'
+import AuthGuard from './common/AuthGuard'
 
 const app = new Koa()
 
@@ -43,6 +44,7 @@ const middleware = compose([
   helmet(),
   errorHandle,
   jwt,
+  AuthGuard,
   routes()
 ])
 

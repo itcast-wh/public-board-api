@@ -1,7 +1,7 @@
 import Vote from '../model/Vote'
 import VoteRecord from '../model/VoteRecord'
 import Comments from '../model/Comments'
-import { getJWTPayload } from '@/common/Utils'
+import CommentsRecord from '../model/CommentsRecord'
 import Codes from '@/common/Constants'
 class ContentService {
   // 获取首页投票列表
@@ -11,8 +11,8 @@ class ContentService {
     const page = params.page ? params.page : 0
     const limit = params.limit ? parseInt(params.limit) : 10
     let result = await Vote.getVoteList(text, page, limit)
-    if (typeof ctx.header.authorization !== 'undefined') {
-      const obj = await getJWTPayload(ctx.header.authorization)
+    if (ctx.obj) {
+      const { obj } = ctx
       result = result.map(item => item.toJSON())
       for (let i = 0; i < result.length; i++) {
         const item = result[i]
@@ -32,8 +32,8 @@ class ContentService {
   // 添加新的内容
   async addVote (ctx) {
     const { body } = ctx.request
-    if (typeof ctx.header.authorization !== 'undefined' && ctx.header.authorization.split(' ').length > 1) {
-      const obj = await getJWTPayload(ctx.header.authorization)
+    if (ctx.obj) {
+      const { obj } = ctx
       body.uid = obj._id
       const newVote = new Vote(body)
       const result = await newVote.save()
@@ -53,7 +53,15 @@ class ContentService {
   // 获取投票内容
   async getDetail (ctx) {
     const params = ctx.query
-    const result = await Vote.findByID(params.id)
+    let result = await Vote.findByID(params.id)
+    if (ctx.obj) {
+      const { obj } = ctx
+      result = result.toJSON()
+      const record = await VoteRecord.findOne({ vid: params.id, uid: obj._id })
+      if (record) {
+        result.handed = 1
+      }
+    }
     if (result.title) {
       ctx.body = {
         code: Codes.OK,
@@ -76,7 +84,18 @@ class ContentService {
     const id = params.id
     const page = params.page ? params.page : 0
     const limit = params.limit ? parseInt(params.limit) : 10
-    const result = await Comments.getCommentsList(id, page, limit)
+    let result = await Comments.getCommentsList(id, page, limit)
+    if (ctx.obj) {
+      const { obj } = ctx
+      result = result.map(item => item.toJSON())
+      for (let i = 0; i < result.length; i++) {
+        const item = result[i]
+        const record = await CommentsRecord.findOne({ cid: item._id, uid: obj._id })
+        if (record) {
+          item.handed = 1
+        }
+      }
+    }
     ctx.body = {
       code: Codes.OK,
       msg: '获取成功',
@@ -87,8 +106,8 @@ class ContentService {
   // 添加评论
   async addComments (ctx) {
     const { body } = ctx.request
-    if (typeof ctx.header.authorization !== 'undefined' && ctx.header.authorization.split(' ').length > 1) {
-      const obj = await getJWTPayload(ctx.header.authorization)
+    if (ctx.obj) {
+      const { obj } = ctx
       body.uid = obj._id
       const newComment = new Comments(body)
       const result = await newComment.save()
@@ -108,7 +127,7 @@ class ContentService {
   // 投票点赞
   async handsVote (ctx) {
     const params = ctx.query
-    const obj = await getJWTPayload(ctx.header.authorization)
+    const { obj } = ctx
     const old = await VoteRecord.findOne({ vid: params.id, uid: obj._id })
     let result
     if (old && old.created) {
@@ -125,6 +144,34 @@ class ContentService {
       })
       result = await record.save()
       await Vote.updateOne({ _id: params.id }, { $inc: { likes: 1 } })
+      ctx.body = {
+        code: Codes.OK,
+        data: result,
+        msg: '成功点赞！'
+      }
+    }
+  }
+
+  // 评论点赞
+  async handsComment (ctx) {
+    const params = ctx.query
+    const { obj } = ctx
+    const old = await CommentsRecord.findOne({ cid: params.id, uid: obj._id })
+    let result
+    if (old && old.created) {
+      result = await CommentsRecord.deleteOne(old)
+      await Comments.updateOne({ _id: params.id }, { $inc: { likes: -1 } })
+      ctx.body = {
+        code: Codes.OK,
+        msg: '删除成功'
+      }
+    } else {
+      const record = new CommentsRecord({
+        cid: params.id,
+        uid: obj._id
+      })
+      result = await record.save()
+      await Comments.updateOne({ _id: params.id }, { $inc: { likes: 1 } })
       ctx.body = {
         code: Codes.OK,
         data: result,
