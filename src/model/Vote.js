@@ -25,10 +25,13 @@ VoteSchema.pre('update', function (next) {
 
 VoteSchema.statics = {
   getVoteList: function (text, page, limit) {
-    return this.find({ title: text })
+    return this.find({ title: (text === '' ? { $ne: '' } : { $regex: text }) })
       .skip(page * limit)
       .limit(limit)
       .sort({ created: -1 })
+  },
+  findByID: function (id) {
+    return this.findOne({ _id: id })
   }
 }
 
