@@ -1,5 +1,6 @@
 export default {
   OK: 200,
+  NOAUTH: 401,
   NOFOUND: 404,
   ERROR: 500,
   REDIRECT: 301,

@@ -1,6 +1,4 @@
 import { HttpException } from './HttpException'
-import { getJWTPayload } from '@/common/Utils'
-import User from '@/model/User'
 import ErrorRecord from '@/model/ErrorRecord'
 
 export default async (ctx, next) => {
@@ -12,13 +10,6 @@ export default async (ctx, next) => {
     const isDev = true
 
     // 取 username 并存入日志
-    let user
-    const _authorization = ctx.header.authorization
-    if (_authorization && (_authorization.split(' ')[1] !== 'undefined')) {
-      const obj = getJWTPayload(_authorization)
-      user = await User.findOne({ _id: obj._id })
-    }
-
     let param = ''
     if (ctx.method === 'GET') {
       param = JSON.stringify(ctx.request.query)
@@ -27,23 +18,27 @@ export default async (ctx, next) => {
     }
 
     if (isDev) {
-      // 开发环境，用于本地测试
-      await ErrorRecord.create({
-        message: error.message, // msg 生成环境，message 开发环境
-        code: ctx.response.status,
-        method: ctx.method,
-        path: ctx.path,
-        param: param,
-        username: user ? user.username : '',
-        stack: error.stack
-      })
+      // 开发环境，用于本地测试, 不用保存错误信息
+      // await ErrorRecord.create({
+      //   message: error.message, // msg 生成环境，message 开发环境
+      //   code: ctx.response.status,
+      //   method: ctx.method,
+      //   path: ctx.path,
+      //   param: param,
+      //   stack: error.stack
+      // })
+      ctx.body = {
+        msg: error.msg,
+        code: error.errorCode,
+        data: `${ctx.method} ${ctx.path}`
+      }
     }
 
     if (isDev && !isHttpException) {
       throw error
     }
 
-    // 生成环境
+    // 生产环境
     if (isHttpException) {
       await ErrorRecord.create({
         message: error.msg,
@@ -51,21 +46,20 @@ export default async (ctx, next) => {
         method: ctx.method,
         path: ctx.path,
         param: param,
-        username: user ? user.username : '',
         stack: error.stack
       })
 
       ctx.body = {
         msg: error.msg,
-        error_code: error.errorCode,
-        request: `${ctx.method} ${ctx.path}`
+        code: error.errorCode,
+        data: `${ctx.method} ${ctx.path}`
       }
       ctx.status = error.code
     } else {
       ctx.body = {
         msg: '未知错误！',
-        error_code: 9999,
-        request: `${ctx.method} ${ctx.path}`
+        code: 9999,
+        data: `${ctx.method} ${ctx.path}`
       }
       ctx.status = 500
     }
