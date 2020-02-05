@@ -54,7 +54,7 @@ if (!isDevMode) {
 
 app.use(middleware)
 
-const port = !isDevMode ? 5000 : 3000
+const port = !isDevMode ? 10080 : 3000
 
 console.log('port is:' + port)
 

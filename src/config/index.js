@@ -1,6 +1,6 @@
 import path from 'path'
 
-const DB_URL = 'mongodb://localhost:27017/board'
+const DB_URL = 'mongodb://admin:5TqtecX3QWtWfffh@localhost:27017/board'
 const secret = 'FvHbS5syynGTVegdfD8Vt2774ErM7Nsy'
 
 const uploadPath =
@@ -17,7 +17,7 @@ const REDIS = {
 
 const baseUrl =
   process.env.NODE_ENV === 'production'
-    ? 'http://www.yourdomain.com'
+    ? 'http://dev.itcastor.com:10100'
     : 'http://localhost:8080'
 
 export default {
