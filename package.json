@@ -38,7 +38,7 @@
     "koa-jwt": "^3.6.0",
     "koa-router": "^8.0.6",
     "koa-static": "^5.0.0",
-    "moment": "^2.24.0",
+    "moment": "^2.29.4",
     "mongoose": "^5.8.9",
     "redis": "^2.8.0",
     "uuid": "^3.4.0"
